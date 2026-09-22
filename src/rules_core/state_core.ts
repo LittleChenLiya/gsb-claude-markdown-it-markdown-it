@@ -10,6 +10,12 @@ class StateCore {
   inlineMode = false
   declare md: MarkdownIt
 
+  // Offsets of `\n` characters in the normalized source that came from
+  // `\r\n` pairs, sorted ascending. Only collected when the
+  // `sourceRanges` option is enabled, to translate ranges back to
+  // original input offsets.
+  crlfNormIndexes: number[] | null = null
+
   // re-export Token class to use in core rules
   Token = Token
 

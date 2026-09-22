@@ -17,7 +17,7 @@ export default MarkdownItCallable
 
 export type { default as MarkdownIt, MarkdownItPreset } from './markdownit.ts'
 export type { Delimiter, Env, MarkdownItOptions } from './types.ts'
-export type { default as Token } from './token.ts'
+export type { default as Token, SourceRange } from './token.ts'
 export type { default as Ruler } from './ruler.ts'
 export type { default as Renderer, RendererRule } from './renderer.ts'
 export type { default as ParserCore } from './parser_core.ts'

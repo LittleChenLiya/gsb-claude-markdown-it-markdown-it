@@ -3,6 +3,7 @@
 
 import type { Delimiter } from '../types.ts'
 import type StateInline from './state_inline.ts'
+import { mergeRanges } from '../common/source_map.ts'
 
 // Insert each marker as a separate text token, and add it to delimiter list
 //
@@ -19,6 +20,7 @@ function emphasis_tokenize (state: StateInline, silent: boolean): boolean {
   for (let i = 0; i < scanned.length; i++) {
     const token = state.push('text', '', 0)
     token.content = String.fromCharCode(marker)
+    if (state.srcMap) { token.setSourceRange(start + i, start + i + 1) }
 
     state.delimiters.push({
       // Char code of the starting marker (number).
@@ -98,8 +100,18 @@ function postProcess (state: StateInline, delimiters: Delimiter[]) {
     token_c.content = ''
 
     if (isStrong) {
-      state.tokens[delimiters[i - 1].token].content = ''
-      state.tokens[delimiters[startDelim.end + 1].token].content = ''
+      // merge the consumed adjacent markers into the strong tags, so
+      // their ranges cover the whole `**` sequence
+      const token_o2 = state.tokens[delimiters[i - 1].token]
+      const token_c2 = state.tokens[delimiters[startDelim.end + 1].token]
+      token_o2.content = ''
+      token_c2.content = ''
+      if (token_o.sourceRanges || token_o2.sourceRanges) {
+        token_o.sourceRanges = mergeRanges([...(token_o.sourceRanges || []), ...(token_o2.sourceRanges || [])])
+      }
+      if (token_c.sourceRanges || token_c2.sourceRanges) {
+        token_c.sourceRanges = mergeRanges([...(token_c.sourceRanges || []), ...(token_c2.sourceRanges || [])])
+      }
       i--
     }
   }

@@ -2,6 +2,7 @@
 
 import { asciiTrim } from '../common/utils.ts'
 import type StateBlock from './state_block.ts'
+import { SOURCE_MAP, buildLinesMap, trimMap } from '../common/source_map.ts'
 
 export default function paragraph (state: StateBlock, startLine: number, endLine: number): boolean {
   const terminatorRules = state.md.block.ruler.getRules('paragraph')
@@ -29,7 +30,8 @@ export default function paragraph (state: StateBlock, startLine: number, endLine
     if (terminate) { break }
   }
 
-  const content = asciiTrim(state.getLines(startLine, nextLine, state.blkIndent, false))
+  const rawContent = state.getLines(startLine, nextLine, state.blkIndent, false)
+  const content = asciiTrim(rawContent)
 
   state.line = nextLine
 
@@ -40,6 +42,9 @@ export default function paragraph (state: StateBlock, startLine: number, endLine
   token_i.content = content
   token_i.map = [startLine, state.line]
   token_i.children = []
+  if (state.md.options.sourceRanges) {
+    token_i[SOURCE_MAP] = trimMap(buildLinesMap(state, startLine, nextLine, state.blkIndent, false), rawContent)
+  }
 
   state.push('paragraph_close', 'p', -1)
 

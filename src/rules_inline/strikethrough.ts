@@ -25,12 +25,14 @@ function strikethrough_tokenize (state: StateInline, silent: boolean): boolean {
   if (len % 2) {
     token = state.push('text', '', 0)
     token.content = ch
+    if (state.srcMap) { token.setSourceRange(start, start + 1) }
     len--
   }
 
   for (let i = 0; i < len; i += 2) {
     token = state.push('text', '', 0)
     token.content = ch + ch
+    if (state.srcMap) { token.setSourceRange(start + scanned.length - len + i, start + scanned.length - len + i + 2) }
 
     state.delimiters.push({
       marker,

@@ -16,21 +16,27 @@ export default function newline (state: StateInline, silent: boolean): boolean {
   // Pending string is stored in concat mode, indexed lookups will cause
   // convertion to flat mode.
   if (!silent) {
+    let token
+    let trimmed = 0
     if (pmax >= 0 && state.pending.charCodeAt(pmax) === 0x20) {
       if (pmax >= 1 && state.pending.charCodeAt(pmax - 1) === 0x20) {
         // Find whitespaces tail of pending chars.
         let ws = pmax - 1
         while (ws >= 1 && state.pending.charCodeAt(ws - 1) === 0x20) ws--
 
-        state.pending = state.pending.slice(0, ws)
-        state.push('hardbreak', 'br', 0)
+        trimmed = state.pending.length - ws
+        state.trimPending(trimmed)
+        token = state.push('hardbreak', 'br', 0)
       } else {
-        state.pending = state.pending.slice(0, -1)
-        state.push('softbreak', 'br', 0)
+        trimmed = 1
+        state.trimPending(1)
+        token = state.push('softbreak', 'br', 0)
       }
     } else {
-      state.push('softbreak', 'br', 0)
+      token = state.push('softbreak', 'br', 0)
     }
+    // the break covers the trailing spaces it consumed and the '\n' itself
+    if (state.srcMap) { token.setSourceRange(pos - trimmed, pos + 1) }
   }
 
   pos++

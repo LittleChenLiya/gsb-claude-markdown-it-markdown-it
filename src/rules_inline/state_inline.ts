@@ -2,6 +2,7 @@ import Token from '../token.ts'
 import { isWhiteSpace, isPunctCharCode, isMdAsciiPunct } from '../common/utils.ts'
 import type MarkdownIt from '../markdownit.ts'
 import type { Delimiter, Env } from '../types.ts'
+import type { SourceMap } from '../common/source_map.ts'
 
 /** @inline */
 interface ScannedDelimiters {
@@ -47,10 +48,20 @@ class StateInline {
   // Stack of delimiter lists for upper level tags
   _prev_delimiters: Delimiter[][] = []
 
+  // Maps offsets in `src` to offsets in the document source. Set only
+  // when the `sourceRanges` option is enabled.
+  srcMap: SourceMap | null = null
+
+  // Offset in `src` where the current pending text starts, or -1 when
+  // there is no pending text. Pending text is always a contiguous slice
+  // of `src`, so `[pendingStart, pendingStart + pending.length)` is its
+  // source range.
+  pendingStart = -1
+
   // re-export Token class to use in block rules
   Token = Token
 
-  constructor (src: string, md: MarkdownIt, env: Env, outTokens: Token[]) {
+  constructor (src: string, md: MarkdownIt, env: Env, outTokens: Token[], srcMap: SourceMap | null = null) {
     this.src = src
     this.env = env
     this.md = md
@@ -58,6 +69,21 @@ class StateInline {
     this.tokens_meta = Array(outTokens.length)
 
     this.posMax = this.src.length
+    this.srcMap = srcMap
+  }
+
+  // Append text to the pending buffer, remembering where it came from
+  //
+  appendPending (str: string, srcPos: number): void {
+    if (this.srcMap && this.pendingStart < 0) { this.pendingStart = srcPos }
+    this.pending += str
+  }
+
+  // Drop `count` characters from the end of the pending buffer
+  //
+  trimPending (count: number): void {
+    this.pending = this.pending.slice(0, this.pending.length - count)
+    if (this.pending.length === 0) { this.pendingStart = -1 }
   }
 
   // Flush pending text
@@ -66,8 +92,12 @@ class StateInline {
     const token = new Token('text', '', 0)
     token.content = this.pending
     token.level = this.pendingLevel
+    if (this.srcMap && this.pendingStart >= 0) {
+      token.sourceRanges = [[this.pendingStart, this.pendingStart + this.pending.length]]
+    }
     this.tokens.push(token)
     this.pending = ''
+    this.pendingStart = -1
     return token
   }
 

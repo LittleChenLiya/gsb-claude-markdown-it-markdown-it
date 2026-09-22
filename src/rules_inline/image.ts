@@ -3,6 +3,7 @@
 import { normalizeReference, isSpace } from '../common/utils.ts'
 import type Token from '../token.ts'
 import type StateInline from './state_inline.ts'
+import { buildSliceMap } from '../common/source_map.ts'
 
 export default function image (state: StateInline, silent: boolean): boolean {
   let code, content, label, pos, ref, res, title, start
@@ -121,7 +122,8 @@ export default function image (state: StateInline, silent: boolean): boolean {
       content,
       state.md,
       state.env,
-      tokens
+      tokens,
+      state.srcMap ? buildSliceMap(labelStart, labelEnd) : null
     )
 
     const token = state.push('image', 'img', 0)
@@ -129,6 +131,7 @@ export default function image (state: StateInline, silent: boolean): boolean {
     token.attrs = attrs
     token.children = tokens
     token.content = content
+    if (state.srcMap) { token.setSourceRange(oldPos, pos) }
 
     if (title) {
       attrs.push(['title', title])

@@ -50,7 +50,7 @@ export default function text (state: StateInline, silent: boolean): boolean {
 
   if (pos === state.pos) { return false }
 
-  if (!silent) { state.pending += state.src.slice(state.pos, pos) }
+  if (!silent) { state.appendPending(state.src.slice(state.pos, pos), state.pos) }
 
   state.pos = pos
 

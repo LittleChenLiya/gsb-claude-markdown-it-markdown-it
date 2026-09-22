@@ -2,6 +2,7 @@
 
 import { asciiTrim } from '../common/utils.ts'
 import type StateBlock from './state_block.ts'
+import { SOURCE_MAP, buildLinesMap, trimMap } from '../common/source_map.ts'
 
 export default function lheading (state: StateBlock, startLine: number, endLine: number/*, silent */): boolean {
   const terminatorRules = state.md.block.ruler.getRules('paragraph')
@@ -64,7 +65,8 @@ export default function lheading (state: StateBlock, startLine: number, endLine:
     return false
   }
 
-  const content = asciiTrim(state.getLines(startLine, nextLine, state.blkIndent, false))
+  const rawContent = state.getLines(startLine, nextLine, state.blkIndent, false)
+  const content = asciiTrim(rawContent)
 
   state.line = nextLine + 1
 
@@ -76,6 +78,9 @@ export default function lheading (state: StateBlock, startLine: number, endLine:
   token_i.content = content
   token_i.map = [startLine, state.line - 1]
   token_i.children = []
+  if (state.md.options.sourceRanges) {
+    token_i[SOURCE_MAP] = trimMap(buildLinesMap(state, startLine, nextLine, state.blkIndent, false), rawContent)
+  }
 
   const token_c = state.push('heading_close', `h${level}`, -1)
   token_c.markup = String.fromCharCode(marker!)

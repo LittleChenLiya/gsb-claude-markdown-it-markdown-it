@@ -19,6 +19,7 @@ import cfg_default from './presets/default.ts'
 import cfg_zero from './presets/zero.ts'
 import cfg_commonmark from './presets/commonmark.ts'
 import type { Env, MarkdownItOptions } from './types.ts'
+import { shiftRangesToOriginal } from './common/source_map.ts'
 
 const config = {
   default: cfg_default,
@@ -394,6 +395,12 @@ class MarkdownIt {
 
     this.core.process(state)
 
+    if (state.crlfNormIndexes && state.crlfNormIndexes.length > 0) {
+      // translate ranges from normalized-source offsets to original input
+      // offsets, compensating for `\r\n` -> `\n` normalization
+      shiftRangesToOriginal(state.tokens, state.crlfNormIndexes)
+    }
+
     return state.tokens
   }
 
@@ -418,6 +425,10 @@ class MarkdownIt {
 
     state.inlineMode = true
     this.core.process(state)
+
+    if (state.crlfNormIndexes && state.crlfNormIndexes.length > 0) {
+      shiftRangesToOriginal(state.tokens, state.crlfNormIndexes)
+    }
 
     return state.tokens
   }

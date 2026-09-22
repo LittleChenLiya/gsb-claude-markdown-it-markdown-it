@@ -42,6 +42,12 @@ export default function autolink (state: StateInline, silent: boolean): boolean 
       const token_c = state.push('link_close', 'a', -1)
       token_c.markup = 'autolink'
       token_c.info = 'auto'
+
+      if (state.srcMap) {
+        token_o.setSourceRange(start, start + 1)
+        token_t.setSourceRange(start + 1, pos)
+        token_c.setSourceRange(pos, pos + 1)
+      }
     }
 
     state.pos += url.length + 2
@@ -64,6 +70,12 @@ export default function autolink (state: StateInline, silent: boolean): boolean 
       const token_c = state.push('link_close', 'a', -1)
       token_c.markup = 'autolink'
       token_c.info = 'auto'
+
+      if (state.srcMap) {
+        token_o.setSourceRange(start, start + 1)
+        token_t.setSourceRange(start + 1, pos)
+        token_c.setSourceRange(pos, pos + 1)
+      }
     }
 
     state.pos += url.length + 2

@@ -160,4 +160,15 @@ export interface MarkdownItOptions {
    * @defaultValue `100`
    */
   maxNesting?: number
+
+  /**
+   * Track the source position of every token. When enabled, each token
+   * gets a `sourceRanges` property with half-open `[start, end)` UTF-16
+   * code unit ranges in the original input string (including the syntax
+   * markers that formed the token). Tokens created by plugins without
+   * source information get `null`.
+   *
+   * @defaultValue `false`
+   */
+  sourceRanges?: boolean
 }

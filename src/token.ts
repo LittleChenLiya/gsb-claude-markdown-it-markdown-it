@@ -1,10 +1,24 @@
 // Token class
 
+import { SOURCE_MAP, type SourceMap } from './common/source_map.ts'
+
 /** @inline */
 type TokenNesting = -1 | 0 | 1
 
 /** @inline */
 type TokenAttribute = [name: string, value: string | number]
+
+/**
+ * Half-open `[start, end)` range of UTF-16 code unit offsets in the
+ * original markdown source string.
+ */
+export type SourceRange = [start: number, end: number]
+
+// Internal slot used to carry a source map from block rules to the inline
+// parser. Not part of the public API.
+interface Token {
+  [SOURCE_MAP]?: SourceMap
+}
 
 /**
  * Represents one item in the parsed token stream, storing parsed data and
@@ -28,6 +42,17 @@ class Token {
    * Source map info. Format: `[ line_begin, line_end ]`
    */
   map: [number, number] | null = null
+
+  /**
+   * Source positions of this token as a list of half-open `[start, end)`
+   * UTF-16 code unit ranges in the original input string, or `null` when
+   * the `sourceRanges` option is disabled or the source of the token is
+   * unknown (e.g. it was created by a plugin without source information).
+   *
+   * Ranges include the syntax markers that formed the token. Tokens made
+   * of disjoint pieces of the source have multiple ranges, in order.
+   */
+  sourceRanges: SourceRange[] | null = null
 
   /**
    * Level change (number in {-1, 0, 1} set), where:
@@ -157,6 +182,21 @@ class Token {
     } else {
       this.attrs![idx][1] = `${this.attrs![idx][1]} ${value}`
     }
+  }
+
+  /**
+   * Record the source range of this token. Plugins should call this for
+   * tokens they create when the `sourceRanges` option is enabled.
+   *
+   * In inline rules, `start`/`end` are offsets in the inline input
+   * (`state.src`); they are translated to document offsets automatically.
+   * In block rules, use offsets in the document source (`state.src`).
+   * For tokens made of disjoint source pieces, assign `token.sourceRanges`
+   * directly with an ordered list of ranges instead.
+   */
+  setSourceRange (start: number, end: number): this {
+    this.sourceRanges = [[start, end]]
+    return this
   }
 }
 

@@ -2,6 +2,7 @@
 
 import { isSpace } from '../common/utils.ts'
 import type StateBlock from './state_block.ts'
+import { SOURCE_MAP, type SourceMap } from '../common/source_map.ts'
 
 // Limit the amount of empty autocompleted cells in a table,
 // see https://github.com/markdown-it/markdown-it/issues/1000,
@@ -18,7 +19,27 @@ function getLine (state: StateBlock, line: number) {
   return state.src.slice(pos, max)
 }
 
-function escapedSplit (str: string) {
+// Offset of the first character of `lineText` (a trimmed `getLine()` result)
+// in the document source
+function getLineOffset (state: StateBlock, line: number, rawLine: string) {
+  const leadTrim = rawLine.length - rawLine.replace(/^\s+/, '').length
+  return state.bMarks[line] + state.tShift[line] + leadTrim
+}
+
+// Source map for a trimmed table cell, cut out of the raw cell's map
+function trimCellMap (cellMap: number[], rawCell: string): SourceMap {
+  let start = 0
+  while (start < rawCell.length && /\s/.test(rawCell.charAt(start))) start++
+  let end = rawCell.length
+  while (end > start && /\s/.test(rawCell.charAt(end - 1))) end--
+  const map = cellMap.slice(start, end + 1)
+  if (map.length === 0) {
+    map.push(cellMap.length > 0 ? cellMap[cellMap.length - 1] + 1 : 0)
+  }
+  return map
+}
+
+function escapedSplit (str: string, srcMaps: number[][] | null = null, lineOffset = 0) {
   const result = []
   const max = str.length
 
@@ -27,17 +48,28 @@ function escapedSplit (str: string) {
   let isEscaped = false
   let lastPos = 0
   let current = ''
+  let currentMap: number[] = []
 
   while (pos < max) {
     if (ch === 0x7c/* | */) {
       if (!isEscaped) {
         // pipe separating cells, '|'
         result.push(current + str.substring(lastPos, pos))
+        if (srcMaps) {
+          for (let i = lastPos; i < pos; i++) currentMap.push(lineOffset + i)
+          // sentinel: offset of the separating '|'
+          currentMap.push(lineOffset + pos)
+          srcMaps.push(currentMap)
+          currentMap = []
+        }
         current = ''
         lastPos = pos + 1
       } else {
         // escaped pipe, '\|'
         current += str.substring(lastPos, pos - 1)
+        if (srcMaps) {
+          for (let i = lastPos; i < pos - 1; i++) currentMap.push(lineOffset + i)
+        }
         lastPos = pos
       }
     }
@@ -49,6 +81,12 @@ function escapedSplit (str: string) {
   }
 
   result.push(current + str.substring(lastPos))
+  if (srcMaps) {
+    for (let i = lastPos; i < max; i++) currentMap.push(lineOffset + i)
+    // sentinel: offset just past the end of the line
+    currentMap.push(lineOffset + max)
+    srcMaps.push(currentMap)
+  }
 
   return result
 }
@@ -118,12 +156,20 @@ export default function table (state: StateBlock, startLine: number, endLine: nu
     }
   }
 
-  lineText = getLine(state, startLine).trim()
+  const rawHeaderLine = getLine(state, startLine)
+  lineText = rawHeaderLine.trim()
   if (lineText.indexOf('|') === -1) { return false }
   if (state.sCount[startLine] - state.blkIndent >= 4) { return false }
-  columns = escapedSplit(lineText)
-  if (columns.length && columns[0] === '') columns.shift()
-  if (columns.length && columns[columns.length - 1] === '') columns.pop()
+  const trackRanges = state.md.options.sourceRanges
+  let headerMaps: number[][] | null = null
+  if (trackRanges) {
+    headerMaps = []
+    columns = escapedSplit(lineText, headerMaps, getLineOffset(state, startLine, rawHeaderLine))
+  } else {
+    columns = escapedSplit(lineText)
+  }
+  if (columns.length && columns[0] === '') { columns.shift(); headerMaps?.shift() }
+  if (columns.length && columns[columns.length - 1] === '') { columns.pop(); headerMaps?.pop() }
 
   // header row will define an amount of columns in the entire table,
   // and align row should be exactly the same (the rest of the rows can differ)
@@ -158,6 +204,10 @@ export default function table (state: StateBlock, startLine: number, endLine: nu
     const token_il = state.push('inline', '', 0)
     token_il.content = columns[i].trim()
     token_il.children = []
+    if (trackRanges) {
+      token_ho.setSourceRange(state.bMarks[startLine], state.eMarks[startLine])
+      token_il[SOURCE_MAP] = trimCellMap(headerMaps![i], columns[i])
+    }
 
     state.push('th_close', 'th', -1)
   }
@@ -180,12 +230,19 @@ export default function table (state: StateBlock, startLine: number, endLine: nu
     }
 
     if (terminate) { break }
-    lineText = getLine(state, nextLine).trim()
+    const rawLine = getLine(state, nextLine)
+    lineText = rawLine.trim()
     if (!lineText) { break }
     if (state.sCount[nextLine] - state.blkIndent >= 4) { break }
-    columns = escapedSplit(lineText)
-    if (columns.length && columns[0] === '') columns.shift()
-    if (columns.length && columns[columns.length - 1] === '') columns.pop()
+    let rowMaps: number[][] | null = null
+    if (trackRanges) {
+      rowMaps = []
+      columns = escapedSplit(lineText, rowMaps, getLineOffset(state, nextLine, rawLine))
+    } else {
+      columns = escapedSplit(lineText)
+    }
+    if (columns.length && columns[0] === '') { columns.shift(); rowMaps?.shift() }
+    if (columns.length && columns[columns.length - 1] === '') { columns.pop(); rowMaps?.pop() }
 
     // note: autocomplete count can be negative if user specifies more columns than header,
     // but that does not affect intended use (which is limiting expansion)
@@ -209,6 +266,10 @@ export default function table (state: StateBlock, startLine: number, endLine: nu
       const token_il = state.push('inline', '', 0)
       token_il.content = columns[i] ? columns[i].trim() : ''
       token_il.children = []
+      if (trackRanges) {
+        token_tdo.setSourceRange(state.bMarks[nextLine], state.eMarks[nextLine])
+        token_il[SOURCE_MAP] = columns[i] ? trimCellMap(rowMaps![i], columns[i]) : [state.eMarks[nextLine]]
+      }
 
       state.push('td_close', 'td', -1)
     }

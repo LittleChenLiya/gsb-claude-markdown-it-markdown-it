@@ -45,6 +45,8 @@ export default function html_inline (state: StateInline, silent: boolean): boole
 
     if (isLinkOpen(token.content)) state.linkLevel++
     if (isLinkClose(token.content)) state.linkLevel--
+
+    if (state.srcMap) { token.setSourceRange(pos, pos + match[0].length) }
   }
   state.pos += match[0].length
   return true

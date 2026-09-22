@@ -19,6 +19,7 @@ import r_entity from './rules_inline/entity.ts'
 
 import r_balance_pairs from './rules_inline/balance_pairs.ts'
 import r_fragments_join from './rules_inline/fragments_join.ts'
+import { mapRanges, type SourceMap } from './common/source_map.ts'
 
 // Parser rules
 
@@ -168,7 +169,8 @@ class ParserInline {
         continue
       }
 
-      state.pending += state.src[state.pos++]
+      state.appendPending(state.src[state.pos], state.pos)
+      state.pos++
     }
 
     if (state.pending) {
@@ -179,8 +181,8 @@ class ParserInline {
   /**
    * Process input string and push inline tokens into `outTokens`
    */
-  parse (str: string, md: MarkdownIt, env: Env, outTokens: Token[]): void {
-    const state = new this.State(str, md, env, outTokens)
+  parse (str: string, md: MarkdownIt, env: Env, outTokens: Token[], srcMap: SourceMap | null = null): void {
+    const state = new this.State(str, md, env, outTokens, srcMap)
 
     this.tokenize(state)
 
@@ -189,6 +191,18 @@ class ParserInline {
 
     for (let i = 0; i < len; i++) {
       rules[i](state)
+    }
+
+    // Translate token ranges from local offsets to document offsets.
+    // Nested inline parses (e.g. image alt text) get their own map and
+    // are translated by their own `parse()` call, so only the top-level
+    // tokens are processed here.
+    if (state.srcMap) {
+      for (const token of outTokens) {
+        if (token.sourceRanges) {
+          token.sourceRanges = mapRanges(state.srcMap, token.sourceRanges)
+        }
+      }
     }
   }
 }

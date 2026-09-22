@@ -137,7 +137,12 @@ export default function link (state: StateInline, silent: boolean): boolean {
     state.md.inline.tokenize(state)
     state.linkLevel--
 
-    state.push('link_close', 'a', -1)
+    const token_c = state.push('link_close', 'a', -1)
+
+    if (state.srcMap) {
+      token_o.setSourceRange(oldPos, labelStart)
+      token_c.setSourceRange(labelEnd, pos)
+    }
   }
 
   state.pos = pos

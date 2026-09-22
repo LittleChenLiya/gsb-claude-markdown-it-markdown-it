@@ -2,6 +2,7 @@
 
 import { isSpace, asciiTrim } from '../common/utils.ts'
 import type StateBlock from './state_block.ts'
+import { SOURCE_MAP, buildSliceMap, trimMap } from '../common/source_map.ts'
 
 export default function heading (state: StateBlock, startLine: number, endLine: number, silent: boolean): boolean {
   let pos = state.bMarks[startLine] + state.tShift[startLine]
@@ -41,9 +42,13 @@ export default function heading (state: StateBlock, startLine: number, endLine: 
   token_o.map = [startLine, state.line]
 
   const token_i = state.push('inline', '', 0)
-  token_i.content = asciiTrim(state.src.slice(pos, max))
+  const rawContent = state.src.slice(pos, max)
+  token_i.content = asciiTrim(rawContent)
   token_i.map = [startLine, state.line]
   token_i.children = []
+  if (state.md.options.sourceRanges) {
+    token_i[SOURCE_MAP] = trimMap(buildSliceMap(pos, max), rawContent)
+  }
 
   const token_c = state.push('heading_close', `h${level}`, -1)
   token_c.markup = '########'.slice(0, level)

@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- New `sourceRanges` option: when enabled, every token gets a `sourceRanges`
+  property with half-open `[start, end)` UTF-16 ranges in the original input
+  (syntax markers included, CRLF normalization and removed indentation
+  accounted for). Plugins can record positions of their tokens with
+  `token.setSourceRange()`; tokens without known source get `null`.
+
 ## [15.0.2] - 2026-09-11
 
 ### Security

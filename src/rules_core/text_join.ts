@@ -8,6 +8,14 @@
 
 import type StateCore from './state_core.ts'
 import type Token from '../token.ts'
+import { mergeRanges } from '../common/source_map.ts'
+
+// merge source ranges of two collapsed text tokens
+function join_ranges (prev: Token, next: Token): void {
+  if (prev.sourceRanges || next.sourceRanges) {
+    next.sourceRanges = mergeRanges([...(prev.sourceRanges || []), ...(next.sourceRanges || [])])
+  }
+}
 
 function join_alt (tokens: Token[]): void {
   let curr, last
@@ -22,6 +30,7 @@ function join_alt (tokens: Token[]): void {
         curr + 1 < max &&
         tokens[curr + 1].type === 'text') {
       tokens[curr + 1].content = tokens[curr].content + tokens[curr + 1].content
+      join_ranges(tokens[curr], tokens[curr + 1])
     } else {
       if (curr !== last) { tokens[last] = tokens[curr] }
 
@@ -56,6 +65,7 @@ export default function text_join (state: StateCore): void {
           tokens[curr + 1].type === 'text') {
         // collapse two adjacent text nodes
         tokens[curr + 1].content = tokens[curr].content + tokens[curr + 1].content
+        join_ranges(tokens[curr], tokens[curr + 1])
       } else {
         if (curr !== last) { tokens[last] = tokens[curr] }
 

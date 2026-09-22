@@ -27,6 +27,7 @@ export default function entity (state: StateInline, silent: boolean): boolean {
         token.content = isValidEntityCode(code) ? fromCodePoint(code) : fromCodePoint(0xFFFD)
         token.markup = match[0]
         token.info = 'entity'
+        if (state.srcMap) { token.setSourceRange(pos, pos + match[0].length) }
       }
       state.pos += match[0].length
       return true
@@ -41,6 +42,7 @@ export default function entity (state: StateInline, silent: boolean): boolean {
           token.content = decoded
           token.markup = match[0]
           token.info = 'entity'
+          if (state.srcMap) { token.setSourceRange(pos, pos + match[0].length) }
         }
         state.pos += match[0].length
         return true

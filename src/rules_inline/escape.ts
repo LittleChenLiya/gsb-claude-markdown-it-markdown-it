@@ -24,7 +24,8 @@ export default function escape (state: StateInline, silent: boolean): boolean {
 
   if (ch1 === 0x0A) {
     if (!silent) {
-      state.push('hardbreak', 'br', 0)
+      const token = state.push('hardbreak', 'br', 0)
+      if (state.srcMap) { token.setSourceRange(pos - 1, pos + 1) }
     }
 
     pos++
@@ -47,6 +48,7 @@ export default function escape (state: StateInline, silent: boolean): boolean {
       token.content = '\\'
       token.markup = '\\'
       token.info = 'escape'
+      if (state.srcMap) { token.setSourceRange(pos - 1, pos) }
     }
 
     state.pos = pos
@@ -77,6 +79,7 @@ export default function escape (state: StateInline, silent: boolean): boolean {
 
     token.markup = origStr
     token.info = 'escape'
+    if (state.srcMap) { token.setSourceRange(state.pos, pos + 1) }
   }
 
   state.pos = pos + 1

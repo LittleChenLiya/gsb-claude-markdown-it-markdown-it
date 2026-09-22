@@ -37,7 +37,10 @@ const options: Required<MarkdownItOptions> = {
   highlight: null,
 
   // Internal protection, recursion limit
-  maxNesting: 20
+  maxNesting: 20,
+
+  // Track token source positions in `token.sourceRanges`
+  sourceRanges: false
 }
 
 export default {

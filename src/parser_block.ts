@@ -15,6 +15,7 @@ import r_html_block from './rules_block/html_block.ts'
 import r_heading from './rules_block/heading.ts'
 import r_lheading from './rules_block/lheading.ts'
 import r_paragraph from './rules_block/paragraph.ts'
+import { assignBlockRanges } from './common/source_map.ts'
 
 const _rules: Array<[
   name: string,
@@ -127,6 +128,10 @@ class ParserBlock {
     const state = new this.State(src, md, env, outTokens)
 
     this.tokenize(state, state.line, state.lineMax)
+
+    // Assign source ranges while the state's line offsets still describe
+    // the original document (nested parsing temporarily rewrites them).
+    if (md.options.sourceRanges) { assignBlockRanges(state) }
   }
 }
 

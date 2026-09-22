@@ -63,7 +63,7 @@ export default function linkify (state: StateInline, silent: boolean): boolean {
   if (!state.md.validateLink(fullUrl)) return false
 
   if (!silent) {
-    state.pending = state.pending.slice(0, -protoLength)
+    state.trimPending(protoLength)
 
     const token_o = state.push('link_open', 'a', 1)
     token_o.attrs = [['href', fullUrl]]
@@ -76,6 +76,14 @@ export default function linkify (state: StateInline, silent: boolean): boolean {
     const token_c = state.push('link_close', 'a', -1)
     token_c.markup = 'linkify'
     token_c.info = 'auto'
+
+    if (state.srcMap) {
+      // the url has no dedicated markup in the source, so the link tags
+      // get zero-width ranges at the boundaries of the matched text
+      token_o.setSourceRange(protoStart, protoStart)
+      token_t.setSourceRange(protoStart, protoStart + url.length)
+      token_c.setSourceRange(protoStart + url.length, protoStart + url.length)
+    }
   }
 
   state.pos += url.length - protoLength
