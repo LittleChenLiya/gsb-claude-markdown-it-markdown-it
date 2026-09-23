@@ -1,0 +1,149 @@
+basic container with markdown body
+.
+:::note
+hello *world*
+:::
+.
+<div class="markdown-it-directive markdown-it-directive-note">
+<p>hello <em>world</em></p>
+</div>
+.
+
+
+title is rendered as escaped plain text
+.
+:::warning <img src=x>
+body
+:::
+.
+<div class="markdown-it-directive markdown-it-directive-warning">
+<p class="markdown-it-directive-title">&lt;img src=x&gt;</p>
+<p>body</p>
+</div>
+.
+
+
+nested containers keep hierarchy
+.
+:::note outer
+:::warning <img>
+inner
+:::
+:::
+.
+<div class="markdown-it-directive markdown-it-directive-note">
+<p class="markdown-it-directive-title">outer</p>
+<div class="markdown-it-directive markdown-it-directive-warning">
+<p class="markdown-it-directive-title">&lt;img&gt;</p>
+<p>inner</p>
+</div>
+</div>
+.
+
+
+close marker inside fenced code is just code content
+.
+:::note
+```
+:::
+```
+:::
+after
+.
+<div class="markdown-it-directive markdown-it-directive-note">
+<pre><code>:::
+</code></pre>
+</div>
+<p>after</p>
+.
+
+
+unclosed container falls back to plain text and keeps following blocks
+.
+:::note
+unclosed
+
+para after
+.
+<p>:::note
+unclosed</p>
+<p>para after</p>
+.
+
+
+container inside list item
+.
+- :::note
+  item text
+  :::
+.
+<ul>
+<li>
+<div class="markdown-it-directive markdown-it-directive-note">
+<p>item text</p>
+</div>
+</li>
+</ul>
+.
+
+
+container inside blockquote
+.
+> :::warning
+> quoted
+> :::
+.
+<blockquote>
+<div class="markdown-it-directive markdown-it-directive-warning">
+<p>quoted</p>
+</div>
+</blockquote>
+.
+
+
+name must start with a letter
+.
+:::1bad
+:::
+.
+<p>:::1bad
+:::</p>
+.
+
+
+four colons is not a directive
+.
+::::
+:::
+.
+<p>::::
+:::</p>
+.
+
+
+name allows digits, underscores and dashes
+.
+:::my-note_2
+body
+:::
+.
+<div class="markdown-it-directive markdown-it-directive-my-note_2">
+<p>body</p>
+</div>
+.
+
+
+multiple blocks inside container
+.
+:::note
+first
+
+second
+:::
+.
+<div class="markdown-it-directive markdown-it-directive-note">
+<p>first</p>
+<p>second</p>
+</div>
+.
+

@@ -137,6 +137,29 @@ default_rules.html_inline = function (tokens: Token[], idx: number): string {
   return tokens[idx].content
 }
 
+default_rules.directive_open = function (
+  tokens: Token[],
+  idx: number
+): string {
+  const token = tokens[idx]
+
+  // `info` (directive name) is validated by the block rule to match
+  // [A-Za-z][A-Za-z0-9_-]*, escape anyway to guarantee no attribute injection.
+  let result = `<div class="markdown-it-directive markdown-it-directive-${escapeHtml(token.info)}">\n`
+
+  const meta = token.meta as { title?: string } | null
+  if (meta && meta.title) {
+    // Title is rendered as escaped plain text, never as markup
+    result += `<p class="markdown-it-directive-title">${escapeHtml(meta.title)}</p>\n`
+  }
+
+  return result
+}
+
+default_rules.directive_close = function (): string {
+  return '</div>\n'
+}
+
 /**
  * Generates HTML from parsed token stream. Each instance has independent
  * copy of rules. Those can be rewritten with ease. Also, you can add new

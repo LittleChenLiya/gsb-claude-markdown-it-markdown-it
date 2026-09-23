@@ -14,6 +14,7 @@ import r_reference from './rules_block/reference.ts'
 import r_html_block from './rules_block/html_block.ts'
 import r_heading from './rules_block/heading.ts'
 import r_lheading from './rules_block/lheading.ts'
+import r_directive from './rules_block/directive.ts'
 import r_paragraph from './rules_block/paragraph.ts'
 
 const _rules: Array<[
@@ -33,6 +34,7 @@ const _rules: Array<[
   ['html_block', r_html_block, ['paragraph', 'reference', 'blockquote']],
   ['heading', r_heading, ['paragraph', 'reference', 'blockquote']],
   ['lheading', r_lheading],
+  ['directive', r_directive, ['paragraph', 'reference', 'blockquote', 'list']],
   ['paragraph', r_paragraph]
 ]
 
@@ -51,6 +53,10 @@ class ParserBlock {
     for (let i = 0; i < _rules.length; i++) {
       this.ruler.push(_rules[i][0], _rules[i][1], { alt: (_rules[i][2] || []).slice() })
     }
+
+    // Directive containers are an opt-in extension, disabled by default.
+    // Enable with `md.enable('directive')`.
+    this.ruler.disable('directive')
   }
 
   // Generate tokens for input range

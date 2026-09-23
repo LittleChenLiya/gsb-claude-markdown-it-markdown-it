@@ -160,4 +160,13 @@ export interface MarkdownItOptions {
    * @defaultValue `100`
    */
   maxNesting?: number
+
+  /**
+   * Maximum nesting depth of `directive` containers
+   * (the opt-in `directive` block rule, see `md.enable('directive')`).
+   * Directives nested deeper than this limit are rendered as plain text.
+   *
+   * @defaultValue `10`
+   */
+  directiveMaxDepth?: number
 }

@@ -37,7 +37,10 @@ const options: Required<MarkdownItOptions> = {
   highlight: null,
 
   // Internal protection, recursion limit
-  maxNesting: 100
+  maxNesting: 100,
+
+  // Maximum nesting depth of directive containers
+  directiveMaxDepth: 10
 }
 
 export default {
