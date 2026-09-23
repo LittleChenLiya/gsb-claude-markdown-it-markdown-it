@@ -160,4 +160,15 @@ export interface MarkdownItOptions {
    * @defaultValue `100`
    */
   maxNesting?: number
+
+  /**
+   * Record source ranges for generated tokens. When enabled, every token
+   * gets a `sourceRanges` property with an ordered list of half-open
+   * `[start, end)` UTF-16 offsets into the original Markdown source
+   * (before CRLF normalization and block indent removal). Tokens injected
+   * by plugins without source information get `null`.
+   *
+   * @defaultValue `false`
+   */
+  sourceRanges?: boolean
 }

@@ -62,6 +62,7 @@ export default function backtick (state: StateInline, silent: boolean): boolean 
           }
 
           token.content = content
+          state.setSourceRange(token, start, matchEnd)
         }
         state.pos = matchEnd
         return true
@@ -69,7 +70,10 @@ export default function backtick (state: StateInline, silent: boolean): boolean 
     }
   }
 
-  if (!silent) state.pending += marker
+  if (!silent) {
+    if (!state.pending.length) { state.pendingPos = start }
+    state.pending += marker
+  }
   state.pos = pos
   return true
 }

@@ -11,6 +11,7 @@ for (let i = 0; i < 256; i++) { ESCAPED.push(0) }
   .split('').forEach(function (ch) { ESCAPED[ch.charCodeAt(0)] = 1 })
 
 export default function escape (state: StateInline, silent: boolean): boolean {
+  const start = state.pos
   let pos = state.pos
   const max = state.posMax
 
@@ -23,8 +24,9 @@ export default function escape (state: StateInline, silent: boolean): boolean {
   let ch1 = state.src.charCodeAt(pos)
 
   if (ch1 === 0x0A) {
+    let token
     if (!silent) {
-      state.push('hardbreak', 'br', 0)
+      token = state.push('hardbreak', 'br', 0)
     }
 
     pos++
@@ -36,6 +38,7 @@ export default function escape (state: StateInline, silent: boolean): boolean {
     }
 
     state.pos = pos
+    if (token) { state.setSourceRange(token, start, pos) }
     return true
   }
 
@@ -47,6 +50,7 @@ export default function escape (state: StateInline, silent: boolean): boolean {
       token.content = '\\'
       token.markup = '\\'
       token.info = 'escape'
+      state.setSourceRange(token, start, pos)
     }
 
     state.pos = pos
@@ -77,6 +81,8 @@ export default function escape (state: StateInline, silent: boolean): boolean {
 
     token.markup = origStr
     token.info = 'escape'
+
+    state.setSourceRange(token, start, pos + 1)
   }
 
   state.pos = pos + 1

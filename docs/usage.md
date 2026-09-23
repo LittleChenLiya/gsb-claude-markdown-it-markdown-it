@@ -135,3 +135,10 @@ import MarkdownIt from 'markdown-it'
 const md = new MarkdownIt({ linkify: true })
 md.linkify.set({ fuzzyEmail: false }) // disables converting email to link
 ```
+
+
+## Source ranges
+
+If you need to know where each token came from in the original Markdown
+source (for example, to power an editor), enable the `sourceRanges` option.
+See [source ranges](source_ranges.md) for details and the plugin API.

@@ -19,6 +19,7 @@ function emphasis_tokenize (state: StateInline, silent: boolean): boolean {
   for (let i = 0; i < scanned.length; i++) {
     const token = state.push('text', '', 0)
     token.content = String.fromCharCode(marker)
+    state.setSourceRange(token, start + i, start + i + 1)
 
     state.delimiters.push({
       // Char code of the starting marker (number).
@@ -97,9 +98,24 @@ function postProcess (state: StateInline, delimiters: Delimiter[]) {
     token_c.markup = isStrong ? ch + ch : ch
     token_c.content = ''
 
+    // Make the opening/closing tokens cover the whole emphasis span,
+    // including all of their children.
+    const first_o = isStrong ? state.tokens[delimiters[i - 1].token] : token_o
+    const last_c = isStrong ? state.tokens[delimiters[startDelim.end + 1].token] : token_c
+    if (first_o.sourceRanges && last_c.sourceRanges) {
+      const span: [number, number] = [
+        first_o.sourceRanges[0][0],
+        last_c.sourceRanges[last_c.sourceRanges.length - 1][1]
+      ]
+      token_o.sourceRanges = [span]
+      token_c.sourceRanges = [[span[0], span[1]]]
+    }
+
     if (isStrong) {
       state.tokens[delimiters[i - 1].token].content = ''
+      state.tokens[delimiters[i - 1].token].sourceRanges = null
       state.tokens[delimiters[startDelim.end + 1].token].content = ''
+      state.tokens[delimiters[startDelim.end + 1].token].sourceRanges = null
       i--
     }
   }

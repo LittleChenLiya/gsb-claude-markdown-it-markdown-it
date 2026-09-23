@@ -172,12 +172,19 @@ class StateBlock {
   }
 
   // cut lines range from source.
-  getLines (begin: number, end: number, indent: number, keepLastLF: boolean): string {
+  //
+  // If `srcMap` array is passed, it's filled with the source offset of
+  // every character of the returned string (plus the final boundary
+  // offset), so positions in the result can be mapped back to `state.src`.
+  // Offsets of characters that have no direct source (e.g. spaces inserted
+  // by tab expansion) point at the source position they were expanded at.
+  getLines (begin: number, end: number, indent: number, keepLastLF: boolean, srcMap?: number[]): string {
     if (begin >= end) {
       return ''
     }
 
     const queue = new Array(end - begin)
+    let lastPos = 0
 
     for (let i = 0, line = begin; line < end; line++, i++) {
       let lineIndent = 0
@@ -214,11 +221,23 @@ class StateBlock {
       if (lineIndent > indent) {
         // partially expanding tabs in code blocks, e.g '\t\tfoobar'
         // with indent=2 becomes '  \tfoobar'
-        queue[i] = new Array(lineIndent - indent + 1).join(' ') + this.src.slice(first, last)
+        const spaces = lineIndent - indent
+        queue[i] = new Array(spaces + 1).join(' ') + this.src.slice(first, last)
+        if (srcMap) {
+          for (let j = 0; j < spaces; j++) { srcMap.push(first) }
+          for (let pos = first; pos < last; pos++) { srcMap.push(pos) }
+        }
       } else {
         queue[i] = this.src.slice(first, last)
+        if (srcMap) {
+          for (let pos = first; pos < last; pos++) { srcMap.push(pos) }
+        }
       }
+
+      lastPos = last
     }
+
+    if (srcMap) { srcMap.push(lastPos) }
 
     return queue.join('')
   }

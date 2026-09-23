@@ -69,13 +69,16 @@ export default function linkify (state: StateInline, silent: boolean): boolean {
     token_o.attrs = [['href', fullUrl]]
     token_o.markup = 'linkify'
     token_o.info = 'auto'
+    state.setSourceRange(token_o, protoStart, protoStart + url.length)
 
     const token_t = state.push('text', '', 0)
     token_t.content = state.md.normalizeLinkText(url)
+    state.setSourceRange(token_t, protoStart, protoStart + url.length)
 
     const token_c = state.push('link_close', 'a', -1)
     token_c.markup = 'linkify'
     token_c.info = 'auto'
+    state.setSourceRange(token_c, protoStart, protoStart + url.length)
   }
 
   state.pos += url.length - protoLength

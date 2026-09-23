@@ -10,6 +10,15 @@ class StateCore {
   inlineMode = false
   declare md: MarkdownIt
 
+  /**
+   * Maps offsets in the normalized `src` to UTF-16 offsets in the
+   * original (unnormalized) source. Only populated when the
+   * `sourceRanges` option is enabled.
+   *
+   * @internal
+   */
+  srcMap: number[] | null = null
+
   // re-export Token class to use in core rules
   Token = Token
 

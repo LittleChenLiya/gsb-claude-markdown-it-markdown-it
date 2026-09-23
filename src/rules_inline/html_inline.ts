@@ -42,6 +42,7 @@ export default function html_inline (state: StateInline, silent: boolean): boole
   if (!silent) {
     const token = state.push('html_inline', '', 0)
     token.content = match[0]
+    state.setSourceRange(token, pos, pos + match[0].length)
 
     if (isLinkOpen(token.content)) state.linkLevel++
     if (isLinkClose(token.content)) state.linkLevel--

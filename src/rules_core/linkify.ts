@@ -57,6 +57,15 @@ export default function linkify (state: StateCore): void {
         const text = currentToken.content
         let links = state.md.linkify.match(text)!
 
+        // Offsets within the token content can only be mapped back when
+        // the token comes from a single contiguous range of the source
+        // and its content was not modified (e.g. by typographer rules).
+        const srcRange = currentToken.sourceRanges &&
+          currentToken.sourceRanges.length === 1 &&
+          currentToken.sourceRanges[0][1] - currentToken.sourceRanges[0][0] === text.length
+          ? currentToken.sourceRanges[0]
+          : null
+
         // Now split string to nodes
         const nodes = []
         let level = currentToken.level
@@ -97,6 +106,7 @@ export default function linkify (state: StateCore): void {
             const token = new state.Token('text', '', 0)
             token.content = text.slice(lastPos, pos)
             token.level = level
+            if (srcRange) { token.sourceRanges = [[srcRange[0] + lastPos, srcRange[0] + pos]] }
             nodes.push(token)
           }
 
@@ -105,17 +115,20 @@ export default function linkify (state: StateCore): void {
           token_o.level = level++
           token_o.markup = 'linkify'
           token_o.info = 'auto'
+          if (srcRange) { token_o.sourceRanges = [[srcRange[0] + pos, srcRange[0] + links[ln].lastIndex]] }
           nodes.push(token_o)
 
           const token_t = new state.Token('text', '', 0)
           token_t.content = urlText
           token_t.level = level
+          if (srcRange) { token_t.sourceRanges = [[srcRange[0] + pos, srcRange[0] + links[ln].lastIndex]] }
           nodes.push(token_t)
 
           const token_c = new state.Token('link_close', 'a', -1)
           token_c.level = --level
           token_c.markup = 'linkify'
           token_c.info = 'auto'
+          if (srcRange) { token_c.sourceRanges = [[srcRange[0] + pos, srcRange[0] + links[ln].lastIndex]] }
           nodes.push(token_c)
 
           lastPos = links[ln].lastIndex
@@ -124,6 +137,7 @@ export default function linkify (state: StateCore): void {
           const token = new state.Token('text', '', 0)
           token.content = text.slice(lastPos)
           token.level = level
+          if (srcRange) { token.sourceRanges = [[srcRange[0] + lastPos, srcRange[0] + text.length]] }
           nodes.push(token)
         }
 

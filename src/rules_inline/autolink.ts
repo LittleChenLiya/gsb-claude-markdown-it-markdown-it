@@ -35,13 +35,16 @@ export default function autolink (state: StateInline, silent: boolean): boolean 
       token_o.attrs = [['href', fullUrl]]
       token_o.markup = 'autolink'
       token_o.info = 'auto'
+      state.setSourceRange(token_o, start, start + url.length + 2)
 
       const token_t = state.push('text', '', 0)
       token_t.content = state.md.normalizeLinkText(url)
+      state.setSourceRange(token_t, start + 1, start + 1 + url.length)
 
       const token_c = state.push('link_close', 'a', -1)
       token_c.markup = 'autolink'
       token_c.info = 'auto'
+      state.setSourceRange(token_c, start, start + url.length + 2)
     }
 
     state.pos += url.length + 2
@@ -57,13 +60,16 @@ export default function autolink (state: StateInline, silent: boolean): boolean 
       token_o.attrs = [['href', fullUrl]]
       token_o.markup = 'autolink'
       token_o.info = 'auto'
+      state.setSourceRange(token_o, start, start + url.length + 2)
 
       const token_t = state.push('text', '', 0)
       token_t.content = state.md.normalizeLinkText(url)
+      state.setSourceRange(token_t, start + 1, start + 1 + url.length)
 
       const token_c = state.push('link_close', 'a', -1)
       token_c.markup = 'autolink'
       token_c.info = 'auto'
+      state.setSourceRange(token_c, start, start + url.length + 2)
     }
 
     state.pos += url.length + 2

@@ -137,7 +137,12 @@ export default function link (state: StateInline, silent: boolean): boolean {
     state.md.inline.tokenize(state)
     state.linkLevel--
 
-    state.push('link_close', 'a', -1)
+    const token_c = state.push('link_close', 'a', -1)
+
+    // both the opening and the closing token cover the whole link syntax,
+    // so parent tokens include all of their children
+    state.setSourceRange(token_o, oldPos, pos)
+    state.setSourceRange(token_c, oldPos, pos)
   }
 
   state.pos = pos

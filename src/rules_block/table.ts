@@ -18,7 +18,11 @@ function getLine (state: StateBlock, line: number) {
   return state.src.slice(pos, max)
 }
 
-function escapedSplit (str: string) {
+// Split a table row into cells. If `maps` is passed, it's filled with one
+// entry per cell: the offsets of the cell's characters in `str`, plus the
+// final boundary offset (escaped backslashes are skipped, like in the
+// resulting cell text).
+function escapedSplit (str: string, maps?: number[][]) {
   const result = []
   const max = str.length
 
@@ -27,17 +31,27 @@ function escapedSplit (str: string) {
   let isEscaped = false
   let lastPos = 0
   let current = ''
+  let currentMap: number[] = []
 
   while (pos < max) {
     if (ch === 0x7c/* | */) {
       if (!isEscaped) {
         // pipe separating cells, '|'
         result.push(current + str.substring(lastPos, pos))
+        if (maps) {
+          for (let i = lastPos; i < pos; i++) { currentMap.push(i) }
+          currentMap.push(pos)
+          maps.push(currentMap)
+          currentMap = []
+        }
         current = ''
         lastPos = pos + 1
       } else {
         // escaped pipe, '\|'
         current += str.substring(lastPos, pos - 1)
+        if (maps) {
+          for (let i = lastPos; i < pos - 1; i++) { currentMap.push(i) }
+        }
         lastPos = pos
       }
     }
@@ -49,8 +63,24 @@ function escapedSplit (str: string) {
   }
 
   result.push(current + str.substring(lastPos))
+  if (maps) {
+    for (let i = lastPos; i < max; i++) { currentMap.push(i) }
+    currentMap.push(max)
+    maps.push(currentMap)
+  }
 
   return result
+}
+
+// Build a content map (content offset -> src offset) for a trimmed table
+// cell, given the offsets of the untrimmed cell and its position in src.
+function cellContentMap (column: string, columnMap: number[], content: string, baseOffset: number): number[] {
+  const lead = content === '' ? column.length : column.indexOf(content)
+  const map = new Array(content.length + 1)
+  for (let i = 0; i <= content.length; i++) {
+    map[i] = baseOffset + columnMap[lead + i]
+  }
+  return map
 }
 
 export default function table (state: StateBlock, startLine: number, endLine: number, silent: boolean): boolean {
@@ -118,12 +148,22 @@ export default function table (state: StateBlock, startLine: number, endLine: nu
     }
   }
 
-  lineText = getLine(state, startLine).trim()
+  const srcMapEnabled = !!state.md.options.sourceRanges
+  let lineBaseOffset = 0
+  if (srcMapEnabled) {
+    const linePos = state.bMarks[startLine] + state.tShift[startLine]
+    const rawLine = state.src.slice(linePos, state.eMarks[startLine])
+    lineText = rawLine.trim()
+    lineBaseOffset = linePos + (lineText === '' ? 0 : rawLine.indexOf(lineText))
+  } else {
+    lineText = getLine(state, startLine).trim()
+  }
   if (lineText.indexOf('|') === -1) { return false }
   if (state.sCount[startLine] - state.blkIndent >= 4) { return false }
-  columns = escapedSplit(lineText)
-  if (columns.length && columns[0] === '') columns.shift()
-  if (columns.length && columns[columns.length - 1] === '') columns.pop()
+  let columnMaps: number[][] = []
+  columns = escapedSplit(lineText, srcMapEnabled ? columnMaps : undefined)
+  if (columns.length && columns[0] === '') { columns.shift(); columnMaps.shift() }
+  if (columns.length && columns[columns.length - 1] === '') { columns.pop(); columnMaps.pop() }
 
   // header row will define an amount of columns in the entire table,
   // and align row should be exactly the same (the rest of the rows can differ)
@@ -158,6 +198,9 @@ export default function table (state: StateBlock, startLine: number, endLine: nu
     const token_il = state.push('inline', '', 0)
     token_il.content = columns[i].trim()
     token_il.children = []
+    if (srcMapEnabled) {
+      token_il.contentMap = cellContentMap(columns[i], columnMaps[i], token_il.content, lineBaseOffset)
+    }
 
     state.push('th_close', 'th', -1)
   }
@@ -180,12 +223,20 @@ export default function table (state: StateBlock, startLine: number, endLine: nu
     }
 
     if (terminate) { break }
-    lineText = getLine(state, nextLine).trim()
+    if (srcMapEnabled) {
+      const linePos = state.bMarks[nextLine] + state.tShift[nextLine]
+      const rawLine = state.src.slice(linePos, state.eMarks[nextLine])
+      lineText = rawLine.trim()
+      lineBaseOffset = linePos + (lineText === '' ? 0 : rawLine.indexOf(lineText))
+    } else {
+      lineText = getLine(state, nextLine).trim()
+    }
     if (!lineText) { break }
     if (state.sCount[nextLine] - state.blkIndent >= 4) { break }
-    columns = escapedSplit(lineText)
-    if (columns.length && columns[0] === '') columns.shift()
-    if (columns.length && columns[columns.length - 1] === '') columns.pop()
+    columnMaps = []
+    columns = escapedSplit(lineText, srcMapEnabled ? columnMaps : undefined)
+    if (columns.length && columns[0] === '') { columns.shift(); columnMaps.shift() }
+    if (columns.length && columns[columns.length - 1] === '') { columns.pop(); columnMaps.pop() }
 
     // note: autocomplete count can be negative if user specifies more columns than header,
     // but that does not affect intended use (which is limiting expansion)
@@ -209,6 +260,9 @@ export default function table (state: StateBlock, startLine: number, endLine: nu
       const token_il = state.push('inline', '', 0)
       token_il.content = columns[i] ? columns[i].trim() : ''
       token_il.children = []
+      if (srcMapEnabled && columns[i]) {
+        token_il.contentMap = cellContentMap(columns[i], columnMaps[i], token_il.content, lineBaseOffset)
+      }
 
       state.push('td_close', 'td', -1)
     }

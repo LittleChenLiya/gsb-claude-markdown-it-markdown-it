@@ -45,6 +45,17 @@ export default function heading (state: StateBlock, startLine: number, endLine: 
   token_i.map = [startLine, state.line]
   token_i.children = []
 
+  if (state.md.options.sourceRanges) {
+    // content is a plain slice of src, so the map is identity + offset,
+    // adjusted for trimmed characters
+    const lead = token_i.content === '' ? max - pos : state.src.slice(pos, max).indexOf(token_i.content)
+    const contentMap: number[] = []
+    for (let i = pos + lead; i <= pos + lead + token_i.content.length; i++) {
+      contentMap.push(i)
+    }
+    token_i.contentMap = contentMap
+  }
+
   const token_c = state.push('heading_close', `h${level}`, -1)
   token_c.markup = '########'.slice(0, level)
 

@@ -64,7 +64,19 @@ export default function lheading (state: StateBlock, startLine: number, endLine:
     return false
   }
 
-  const content = asciiTrim(state.getLines(startLine, nextLine, state.blkIndent, false))
+  let content: string
+  let contentMap: number[] | null = null
+
+  if (state.md.options.sourceRanges) {
+    const rawMap: number[] = []
+    const raw = state.getLines(startLine, nextLine, state.blkIndent, false, rawMap)
+    content = asciiTrim(raw)
+    // adjust the map for trimmed characters
+    const lead = content === '' ? raw.length : raw.indexOf(content)
+    contentMap = rawMap.slice(lead, lead + content.length + 1)
+  } else {
+    content = asciiTrim(state.getLines(startLine, nextLine, state.blkIndent, false))
+  }
 
   state.line = nextLine + 1
 
@@ -76,6 +88,7 @@ export default function lheading (state: StateBlock, startLine: number, endLine:
   token_i.content = content
   token_i.map = [startLine, state.line - 1]
   token_i.children = []
+  if (contentMap) { token_i.contentMap = contentMap }
 
   const token_c = state.push('heading_close', `h${level}`, -1)
   token_c.markup = String.fromCharCode(marker!)

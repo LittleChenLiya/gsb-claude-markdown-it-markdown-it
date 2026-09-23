@@ -22,15 +22,21 @@ function strikethrough_tokenize (state: StateInline, silent: boolean): boolean {
 
   let token
 
+  let markerPos = start
+
   if (len % 2) {
     token = state.push('text', '', 0)
     token.content = ch
+    state.setSourceRange(token, markerPos, markerPos + 1)
+    markerPos++
     len--
   }
 
   for (let i = 0; i < len; i += 2) {
     token = state.push('text', '', 0)
     token.content = ch + ch
+    state.setSourceRange(token, markerPos, markerPos + 2)
+    markerPos += 2
 
     state.delimiters.push({
       marker,
@@ -71,6 +77,7 @@ function postProcess (state: StateInline, delimiters: Delimiter[]) {
     token.nesting = 1
     token.markup = '~~'
     token.content = ''
+    const token_o = token
 
     token = state.tokens[endDelim.token]
     token.type = 's_close'
@@ -78,6 +85,17 @@ function postProcess (state: StateInline, delimiters: Delimiter[]) {
     token.nesting = -1
     token.markup = '~~'
     token.content = ''
+
+    // Make the opening/closing tokens cover the whole span,
+    // including all of their children.
+    if (token_o.sourceRanges && token.sourceRanges) {
+      const span: [number, number] = [
+        token_o.sourceRanges[0][0],
+        token.sourceRanges[token.sourceRanges.length - 1][1]
+      ]
+      token_o.sourceRanges = [span]
+      token.sourceRanges = [[span[0], span[1]]]
+    }
 
     if (state.tokens[endDelim.token - 1].type === 'text' &&
         state.tokens[endDelim.token - 1].content === '~') {

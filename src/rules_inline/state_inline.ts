@@ -1,4 +1,5 @@
 import Token from '../token.ts'
+import type { SourceRange } from '../token.ts'
 import { isWhiteSpace, isPunctCharCode, isMdAsciiPunct } from '../common/utils.ts'
 import type MarkdownIt from '../markdownit.ts'
 import type { Delimiter, Env } from '../types.ts'
@@ -28,6 +29,18 @@ class StateInline {
   level = 0
   pending = ''
   pendingLevel = 0
+
+  // Position in `src` where the current `pending` run started. Pending
+  // text is always a contiguous slice of `src`, so its source range is
+  // `[pendingPos, pendingPos + pending.length)`.
+  pendingPos = 0
+
+  /**
+   * Maps offsets of `src` to UTF-16 offsets in the original Markdown
+   * document. Set only when the `sourceRanges` option is enabled and
+   * the source mapping is known.
+   */
+  srcMap: number[] | null = null
 
   // Stores { start: end } pairs. Useful for backtrack
   // optimization of pairs parse (emphasis, strikes).
@@ -66,9 +79,42 @@ class StateInline {
     const token = new Token('text', '', 0)
     token.content = this.pending
     token.level = this.pendingLevel
+    if (this.srcMap) {
+      token.sourceRanges = [[
+        this.srcMap[this.pendingPos],
+        this.srcMap[this.pendingPos + this.pending.length]
+      ]]
+    }
     this.tokens.push(token)
     this.pending = ''
     return token
+  }
+
+  /**
+   * Map a half-open `[start, end)` range of `src` positions to UTF-16
+   * offsets in the original Markdown document. Returns `null` when the
+   * `sourceRanges` option is disabled or the mapping is unknown.
+   *
+   * Plugins can use this together with `token.addSourceRange()` to
+   * report where the tokens they create came from:
+   *
+   * ```js
+   * const range = state.mapRange(start, state.pos)
+   * if (range) token.addSourceRange(range[0], range[1])
+   * ```
+   */
+  mapRange (start: number, end: number): SourceRange | null {
+    const map = this.srcMap
+    if (!map) { return null }
+    return [map[start], map[end]]
+  }
+
+  // Assign the source range of `token` from a half-open range of `src`
+  // positions. No-op when source ranges are disabled or unknown.
+  //
+  setSourceRange (token: Token, start: number, end: number): void {
+    const range = this.mapRange(start, end)
+    if (range) { token.sourceRanges = [range] }
   }
 
   // Push new token to "stream".

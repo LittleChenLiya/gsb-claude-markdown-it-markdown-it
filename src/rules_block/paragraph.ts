@@ -29,7 +29,19 @@ export default function paragraph (state: StateBlock, startLine: number, endLine
     if (terminate) { break }
   }
 
-  const content = asciiTrim(state.getLines(startLine, nextLine, state.blkIndent, false))
+  let content: string
+  let contentMap: number[] | null = null
+
+  if (state.md.options.sourceRanges) {
+    const rawMap: number[] = []
+    const raw = state.getLines(startLine, nextLine, state.blkIndent, false, rawMap)
+    content = asciiTrim(raw)
+    // adjust the map for trimmed characters
+    const lead = content === '' ? raw.length : raw.indexOf(content)
+    contentMap = rawMap.slice(lead, lead + content.length + 1)
+  } else {
+    content = asciiTrim(state.getLines(startLine, nextLine, state.blkIndent, false))
+  }
 
   state.line = nextLine
 
@@ -40,6 +52,7 @@ export default function paragraph (state: StateBlock, startLine: number, endLine
   token_i.content = content
   token_i.map = [startLine, state.line]
   token_i.children = []
+  if (contentMap) { token_i.contentMap = contentMap }
 
   state.push('paragraph_close', 'p', -1)
 

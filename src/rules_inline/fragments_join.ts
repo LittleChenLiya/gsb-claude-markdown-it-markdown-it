@@ -8,6 +8,7 @@
 //
 
 import type StateInline from './state_inline.ts'
+import { mergeSourceRanges } from '../token.ts'
 
 export default function fragments_join (state: StateInline): void {
   let curr, last
@@ -27,6 +28,7 @@ export default function fragments_join (state: StateInline): void {
         tokens[curr + 1].type === 'text') {
       // collapse two adjacent text nodes
       tokens[curr + 1].content = tokens[curr].content + tokens[curr + 1].content
+      tokens[curr + 1].sourceRanges = mergeSourceRanges(tokens[curr].sourceRanges, tokens[curr + 1].sourceRanges)
     } else {
       if (curr !== last) { tokens[last] = tokens[curr] }
 

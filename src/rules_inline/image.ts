@@ -121,7 +121,9 @@ export default function image (state: StateInline, silent: boolean): boolean {
       content,
       state.md,
       state.env,
-      tokens
+      tokens,
+      // the label keeps the coordinate space of the parent src
+      state.srcMap ? state.srcMap.slice(labelStart, labelEnd + 1) : null
     )
 
     const token = state.push('image', 'img', 0)
@@ -138,6 +140,8 @@ export default function image (state: StateInline, silent: boolean): boolean {
       meta.label = label
       token.meta = meta
     }
+
+    state.setSourceRange(token, oldPos, pos)
   }
 
   state.pos = pos

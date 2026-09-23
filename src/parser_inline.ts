@@ -168,6 +168,7 @@ class ParserInline {
         continue
       }
 
+      if (!state.pending.length) { state.pendingPos = state.pos }
       state.pending += state.src[state.pos++]
     }
 
@@ -178,9 +179,13 @@ class ParserInline {
 
   /**
    * Process input string and push inline tokens into `outTokens`
+   *
+   * `srcMap` optionally maps offsets of `str` to UTF-16 offsets in the
+   * original document (used to fill `token.sourceRanges`).
    */
-  parse (str: string, md: MarkdownIt, env: Env, outTokens: Token[]): void {
+  parse (str: string, md: MarkdownIt, env: Env, outTokens: Token[], srcMap?: number[] | null): void {
     const state = new this.State(str, md, env, outTokens)
+    if (srcMap) { state.srcMap = srcMap }
 
     this.tokenize(state)
 
