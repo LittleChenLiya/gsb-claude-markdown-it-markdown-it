@@ -26,3 +26,10 @@ export type { default as ParserBlock } from './parser_block.ts'
 export type { default as StateBlock } from './rules_block/state_block.ts'
 export type { default as ParserInline } from './parser_inline.ts'
 export type { default as StateInline } from './rules_inline/state_inline.ts'
+export type {
+  HeadingRefsOptions,
+  HeadingRefsEnv,
+  HeadingRefHeading,
+  HeadingRefDiagnostic,
+  HeadingRefMeta
+} from './plugins/heading_refs.ts'
