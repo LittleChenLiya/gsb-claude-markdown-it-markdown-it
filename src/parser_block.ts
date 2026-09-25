@@ -10,6 +10,7 @@ import r_fence from './rules_block/fence.ts'
 import r_blockquote from './rules_block/blockquote.ts'
 import r_hr from './rules_block/hr.ts'
 import r_list from './rules_block/list.ts'
+import r_footnote_def from './rules_block/footnote_def.ts'
 import r_reference from './rules_block/reference.ts'
 import r_html_block from './rules_block/html_block.ts'
 import r_heading from './rules_block/heading.ts'
@@ -29,6 +30,7 @@ const _rules: Array<[
   ['blockquote', r_blockquote, ['paragraph', 'reference', 'blockquote', 'list']],
   ['hr', r_hr, ['paragraph', 'reference', 'blockquote', 'list']],
   ['list', r_list, ['paragraph', 'reference', 'blockquote']],
+  ['footnote_def', r_footnote_def, ['paragraph', 'reference']],
   ['reference', r_reference],
   ['html_block', r_html_block, ['paragraph', 'reference', 'blockquote']],
   ['heading', r_heading, ['paragraph', 'reference', 'blockquote']],

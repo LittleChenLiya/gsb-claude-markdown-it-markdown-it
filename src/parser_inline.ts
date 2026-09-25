@@ -13,6 +13,7 @@ import r_strikethrough from './rules_inline/strikethrough.ts'
 import r_emphasis from './rules_inline/emphasis.ts'
 import r_link from './rules_inline/link.ts'
 import r_image from './rules_inline/image.ts'
+import r_footnote_ref from './rules_inline/footnote_ref.ts'
 import r_autolink from './rules_inline/autolink.ts'
 import r_html_inline from './rules_inline/html_inline.ts'
 import r_entity from './rules_inline/entity.ts'
@@ -35,6 +36,7 @@ const _rules: Array<[
   ['emphasis', r_emphasis.tokenize],
   ['link', r_link],
   ['image', r_image],
+  ['footnote_ref', r_footnote_ref],
   ['autolink', r_autolink],
   ['html_inline', r_html_inline],
   ['entity', r_entity]

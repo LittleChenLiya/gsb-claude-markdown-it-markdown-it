@@ -12,6 +12,53 @@ export interface Reference {
 export interface Env {
   [key: string | symbol]: unknown
   references?: Record<string, Reference>
+  /**
+   * Footnote state, filled while parsing when the built-in footnote
+   * extension sees `[^name]` definitions and references.
+   */
+  footnotes?: Footnotes
+  /**
+   * Problems found by the footnote extension: references without
+   * a matching definition and ignored duplicate definitions.
+   */
+  footnoteDiagnostics?: FootnoteDiagnostic[]
+  /**
+   * Caller-provided namespace for the footnote extension. When several
+   * rendered fragments are merged into one page, give each fragment its
+   * own namespace to keep generated HTML ids unique.
+   */
+  footnoteNamespace?: string
+}
+
+/** Diagnostic emitted by the footnote extension. */
+export interface FootnoteDiagnostic {
+  /**
+   * - `missing-definition`: a `[^name]` reference has no matching definition.
+   * - `duplicate-definition`: a `[^name]:` definition was ignored because
+   *   an earlier definition with the same name already exists.
+   */
+  type: 'missing-definition' | 'duplicate-definition'
+  /** Footnote name (label without the `[^` `]` brackets). */
+  name: string
+}
+
+/** A single referenced footnote, numbered in order of first reference. */
+export interface FootnoteEntry {
+  /** Footnote name (label without the `[^` `]` brackets). */
+  label: string
+  /** Number of references to this footnote in the document. */
+  count: number
+}
+
+/** Footnote state collected in `env.footnotes` while parsing. */
+export interface Footnotes {
+  /**
+   * Map of `':' + name` to the assigned footnote number
+   * (`-1` while the definition is not referenced yet).
+   */
+  refs: Record<string, number>
+  /** Referenced footnotes in order of first reference. */
+  list: FootnoteEntry[]
 }
 
 /** Delimiter entry used by emphasis-like inline rules. */

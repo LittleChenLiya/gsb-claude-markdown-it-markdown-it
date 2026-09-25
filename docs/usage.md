@@ -135,3 +135,10 @@ import MarkdownIt from 'markdown-it'
 const md = new MarkdownIt({ linkify: true })
 md.linkify.set({ fuzzyEmail: false }) // disables converting email to link
 ```
+
+
+## Footnotes
+
+The `default` preset supports footnotes out of the box (`[^name]` references
+and `[^name]: ...` definitions). See [footnotes](footnotes.md) for syntax,
+namespaces and diagnostics.

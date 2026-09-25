@@ -1,4 +1,5 @@
 import { unescapeAll, escapeHtml } from './common/utils.ts'
+import { footnoteIdPrefix } from './common/footnote.ts'
 import type Token from './token.ts'
 import type { Env, MarkdownItOptions } from './types.ts'
 
@@ -128,6 +129,67 @@ default_rules.softbreak = function (
 
 default_rules.text = function (tokens: Token[], idx: number): string {
   return escapeHtml(tokens[idx].content)
+}
+
+default_rules.footnote_ref = function (
+  tokens: Token[],
+  idx: number,
+  options: Required<MarkdownItOptions>,
+  env: Env | undefined
+): string {
+  const meta = tokens[idx].meta as { id: number, subId: number }
+  const n = meta.id + 1
+  const prefix = footnoteIdPrefix(env)
+  const refId = meta.subId > 0 ? prefix + 'fnref' + n + ':' + meta.subId : prefix + 'fnref' + n
+  const caption = meta.subId > 0 ? '[' + n + ':' + meta.subId + ']' : '[' + n + ']'
+
+  return '<sup class="footnote-ref"><a href="#' + escapeHtml(prefix) + 'fn' + n +
+    '" id="' + escapeHtml(refId) + '">' + caption + '</a></sup>'
+}
+
+default_rules.footnote_block_open = function (
+  tokens: Token[],
+  idx: number,
+  options: Required<MarkdownItOptions>
+): string {
+  return (options.xhtmlOut ? '<hr class="footnotes-sep" />\n' : '<hr class="footnotes-sep">\n') +
+    '<section class="footnotes">\n' +
+    '<ol class="footnotes-list">\n'
+}
+
+default_rules.footnote_block_close = function (): string {
+  return '</ol>\n</section>\n'
+}
+
+default_rules.footnote_open = function (
+  tokens: Token[],
+  idx: number,
+  options: Required<MarkdownItOptions>,
+  env: Env | undefined
+): string {
+  const n = (tokens[idx].meta as { id: number }).id + 1
+  const prefix = footnoteIdPrefix(env)
+
+  return '<li id="' + escapeHtml(prefix) + 'fn' + n + '" class="footnote-item">'
+}
+
+default_rules.footnote_close = function (): string {
+  return '</li>\n'
+}
+
+default_rules.footnote_anchor = function (
+  tokens: Token[],
+  idx: number,
+  options: Required<MarkdownItOptions>,
+  env: Env | undefined
+): string {
+  const meta = tokens[idx].meta as { id: number, subId: number }
+  const n = meta.id + 1
+  const prefix = footnoteIdPrefix(env)
+  const refId = meta.subId > 0 ? prefix + 'fnref' + n + ':' + meta.subId : prefix + 'fnref' + n
+
+  /* ↩ with escape code to prevent display as Apple Emoji on iOS */
+  return ' <a href="#' + escapeHtml(refId) + '" class="footnote-backref">\u21a9\uFE0E</a>'
 }
 
 default_rules.html_block = function (tokens: Token[], idx: number): string {

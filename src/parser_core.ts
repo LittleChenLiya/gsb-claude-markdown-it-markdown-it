@@ -5,6 +5,7 @@ import r_normalize from './rules_core/normalize.ts'
 import r_block from './rules_core/block.ts'
 import r_strip_references from './rules_core/strip_references.ts'
 import r_inline from './rules_core/inline.ts'
+import r_footnote_tail from './rules_core/footnote_tail.ts'
 import r_linkify from './rules_core/linkify.ts'
 import r_replacements from './rules_core/replacements.ts'
 import r_smartquotes from './rules_core/smartquotes.ts'
@@ -18,6 +19,7 @@ const _rules: Array<[
   ['block', r_block],
   ['strip_references', r_strip_references],
   ['inline', r_inline],
+  ['footnote_tail', r_footnote_tail],
   ['linkify', r_linkify],
   ['replacements', r_replacements],
   ['smartquotes', r_smartquotes],
