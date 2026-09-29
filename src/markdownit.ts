@@ -19,6 +19,7 @@ import cfg_default from './presets/default.ts'
 import cfg_zero from './presets/zero.ts'
 import cfg_commonmark from './presets/commonmark.ts'
 import type { Env, MarkdownItOptions } from './types.ts'
+import { formatTable, displayWidth, TableFormatError } from './format_table.ts'
 
 const config = {
   default: cfg_default,
@@ -68,6 +69,23 @@ const RECODE_HOSTNAME_FOR = ['http:', 'https:', 'mailto:']
  * @category Main
  */
 class MarkdownIt {
+  /**
+   * Align the pipes of the GFM table containing the given 1-based line
+   * number, leaving the rest of the document untouched. Locates tables
+   * with markdown-it's own block parser and keeps every cell's original
+   * inline source (no HTML round-trip).
+   */
+  static formatTable = formatTable
+
+  /**
+   * Display width of a string in monospace cells: CJK/fullwidth characters
+   * count as 2, combining marks as 0.
+   */
+  static displayWidth = displayWidth
+
+  /** Error thrown by {@link MarkdownIt.formatTable} on unformattable input. */
+  static TableFormatError = TableFormatError
+
   /**
    * Instance of {@link ParserInline}. You may need it to add new rules when
    * writing plugins. For simple rules control use {@link MarkdownIt.disable}
