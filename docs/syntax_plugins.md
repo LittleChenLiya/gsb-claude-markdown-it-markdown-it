@@ -10,6 +10,10 @@ Embedded (enabled by default):
 - [Tables](https://help.github.com/articles/organizing-information-with-tables/) (GFM)
 - [Strikethrough](https://help.github.com/articles/basic-writing-and-formatting-syntax/#styling-text) (GFM)
 
+Bundled (opt-in):
+
+- [Footnotes](footnotes.md) - `[^name]` references and block definitions
+
 Via plugins:
 
 - [subscript](https://github.com/markdown-it/markdown-it-sub)

@@ -64,6 +64,7 @@
     "doc": "typedoc",
     "doc:publish": "npm run doc && gh-pages -d apidoc -f",
     "demo": "npm run lint && node support/build_demo.mjs",
+    "demo:footnote": "node support/demo-footnote.mjs",
     "demo:publish": "npm run demo && gh-pages -d demo -f -b master -r git@github.com:markdown-it/markdown-it.github.io.git",
     "build": "node support/build-dist.mjs",
     "benchmark-deps": "npm install --prefix benchmark/extra/",

@@ -19,6 +19,7 @@ import cfg_default from './presets/default.ts'
 import cfg_zero from './presets/zero.ts'
 import cfg_commonmark from './presets/commonmark.ts'
 import type { Env, MarkdownItOptions } from './types.ts'
+import footnote from './plugins/footnote.ts'
 
 const config = {
   default: cfg_default,
@@ -439,6 +440,16 @@ class MarkdownIt {
   static StateBlock = StateBlock
   static ParserInline = ParserInline
   static StateInline = StateInline
+
+  /**
+   * Bundled footnote plugin, see {@link MarkdownIt.use}.
+   *
+   * @example
+   * ```js
+   * const md = new MarkdownIt().use(MarkdownIt.footnote, { namespace: 'page1' })
+   * ```
+   */
+  static footnote = footnote
 }
 
 export default MarkdownIt
