@@ -19,6 +19,7 @@ import cfg_default from './presets/default.ts'
 import cfg_zero from './presets/zero.ts'
 import cfg_commonmark from './presets/commonmark.ts'
 import type { Env, MarkdownItOptions } from './types.ts'
+import formatTable from './format_table.ts'
 
 const config = {
   default: cfg_default,
@@ -207,10 +208,20 @@ class MarkdownIt {
   /**
    * Link components parser functions, useful to write plugins. See details
    * [here](https://github.com/markdown-it/markdown-it/blob/master/src/helpers).
-   */
+  */
   helpers = Object.assign({}, helpers)
 
   declare options: Required<MarkdownItOptions>
+
+  /**
+   * `MarkdownIt.formatTable(src, lines)`
+   *
+   * Align the pipe separators of the GFM table containing the given
+   * 1-based line number(s), leaving the rest of the source untouched.
+   * Cell contents keep their original inline source, and column
+   * alignment (left/center/right) is preserved.
+   */
+  static formatTable = formatTable
 
   constructor (
     ...args:
