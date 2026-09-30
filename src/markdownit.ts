@@ -19,6 +19,7 @@ import cfg_default from './presets/default.ts'
 import cfg_zero from './presets/zero.ts'
 import cfg_commonmark from './presets/commonmark.ts'
 import type { Env, MarkdownItOptions } from './types.ts'
+import excerptTokens from './excerpt.ts'
 
 const config = {
   default: cfg_default,
@@ -439,6 +440,13 @@ class MarkdownIt {
   static StateBlock = StateBlock
   static ParserInline = ParserInline
   static StateInline = StateInline
+
+  /**
+   * Token-based excerpt helper. Truncates a parsed token stream to a given
+   * number of visible characters (counted in Unicode code points), keeping
+   * all opened structures closed and appending at most one ellipsis.
+   */
+  static excerptTokens = excerptTokens
 }
 
 export default MarkdownIt
