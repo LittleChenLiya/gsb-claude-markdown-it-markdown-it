@@ -11,6 +11,8 @@ import ParserBlock from './parser_block.ts'
 import StateBlock from './rules_block/state_block.ts'
 import ParserInline from './parser_inline.ts'
 import StateInline from './rules_inline/state_inline.ts'
+import { truncateTokens } from './excerpt.ts'
+import type { ExcerptOptions } from './excerpt.ts'
 import { LinkifyIt } from 'linkify-it'
 import * as mdurl from 'mdurl'
 import punycode from 'punycode.js'
@@ -430,9 +432,37 @@ class MarkdownIt {
     return this.renderer.render(this.parseInline(src, env), this.options, env)
   }
 
+  /**
+   * Similar to {@link MarkdownIt.render}, but the output is truncated to at
+   * most 'maxChars' visible characters, counted in Unicode code points.
+   * Useful for article list excerpts.
+   *
+   * Truncation happens on the token stream (see 'truncateTokens'), not on
+   * the rendered HTML string, so emphasis, links, inline code and other
+   * structures are always closed properly. If content was dropped, a single
+   * ellipsis is appended at the cut point; it does not count towards the
+   * limit. Raw HTML, line breaks and image alt text handling follow
+   * 'truncateTokens' rules.
+   *
+   * @example
+   * ```javascript
+   * import MarkdownIt from 'markdown-it'
+   * const md = new MarkdownIt()
+   *
+   * md.renderExcerpt('Hello **wonderful** world', 8)
+   * // '<p>Hello **wo**\u2026</p>' rendered as HTML: '<p>Hello <strong>wo</strong>\u2026</p>\n'
+   * ```
+   */
+  renderExcerpt (src: string, maxChars: number, options: ExcerptOptions & { env?: Env } = {}): string {
+    const { env = {}, ...excerptOptions } = options
+    const result = truncateTokens(this.parse(src, env), maxChars, excerptOptions)
+    return this.renderer.render(result.tokens, this.options, env)
+  }
+
   static Token = Token
   static Ruler = Ruler
   static Renderer = Renderer
+  static truncateTokens = truncateTokens
   static ParserCore = ParserCore
   static StateCore = StateCore
   static ParserBlock = ParserBlock
