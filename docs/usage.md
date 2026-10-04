@@ -135,3 +135,50 @@ import MarkdownIt from 'markdown-it'
 const md = new MarkdownIt({ linkify: true })
 md.linkify.set({ fuzzyEmail: false }) // disables converting email to link
 ```
+
+## Rewriting link targets
+
+When you need to rewrite the actual targets of parsed links, images or link
+reference definitions (for example, to redirect URLs through a proxy), use
+`planLinkRewrite`. It traverses the token stream and collects every *actual*
+link target, asks a caller-supplied mapper for a replacement URL of each
+distinct target, and applies the result in one pass:
+
+```js
+import MarkdownIt from 'markdown-it'
+import { planLinkRewrite } from 'markdown-it'
+
+const md = new MarkdownIt()
+const env = {}
+const tokens = md.parse(src, env)
+
+const plan = planLinkRewrite(tokens, env, (url, target) => {
+  // Return a new URL to accept the target, or `null` to reject the whole plan.
+  return url.replace('http://example.com', 'https://example.org')
+})
+
+if (plan) {
+  plan.apply()
+  const html = md.renderer.render(tokens, md.options, env)
+}
+```
+
+How it works:
+
+- Only parsed `link_open` / `image` tokens and `env.references` definitions
+  are considered. URLs inside code blocks, inline code and plain text are
+  never touched — they are not link targets, and the token stream is walked
+  directly instead of string-replacing the Markdown source.
+- A shared reference definition is rewritten exactly once: the definition in
+  `env.references` is updated together with every token that references it, so
+  all references keep pointing at the same definition and stay associated
+  with it. The plan shows this ownership: `target.kind` is `'reference'`,
+  `target.label` names the definition and `target.tokens` lists every token
+  that uses it.
+- Applying a plan only changes the `href`/`src` attributes; link titles, alt
+  text and the inline markup structure are preserved.
+
+Atomicity: the mapper is consulted for *every* collected target before
+anything is written. If it rejects a target (returns `null`/`undefined`/
+`false`) or throws, `planLinkRewrite` returns `null` and the token stream is
+left exactly as it was before the call — nothing is half-rewritten.

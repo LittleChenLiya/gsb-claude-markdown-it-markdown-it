@@ -18,6 +18,13 @@ export default MarkdownItCallable
 export type { default as MarkdownIt, MarkdownItPreset } from './markdownit.ts'
 export type { Delimiter, Env, MarkdownItOptions } from './types.ts'
 export type { default as Token } from './token.ts'
+export { planLinkRewrite } from './link_rewriter.ts'
+export type {
+  LinkTarget,
+  LinkTargetKind,
+  LinkRewriteMapper,
+  LinkRewritePlan
+} from './link_rewriter.ts'
 export type { default as Ruler } from './ruler.ts'
 export type { default as Renderer, RendererRule } from './renderer.ts'
 export type { default as ParserCore } from './parser_core.ts'
