@@ -1,4 +1,5 @@
 import { unescapeAll, escapeHtml } from './common/utils.ts'
+import { CODE_BLOCK_PLAN_META } from './helpers/code_block_plan.ts'
 import type Token from './token.ts'
 import type { Env, MarkdownItOptions } from './types.ts'
 
@@ -55,8 +56,13 @@ default_rules.fence = function (
     langAttrs = arr.slice(2).join('')
   }
 
+  // Content replaced by an applied code block plan is final: do not run
+  // the highlight callback on it.
+  const planReplaced = token.meta != null &&
+    (token.meta[CODE_BLOCK_PLAN_META] as { replaced?: boolean } | undefined)?.replaced === true
+
   let highlighted
-  if (options.highlight) {
+  if (!planReplaced && options.highlight) {
     highlighted = options.highlight(token.content, langName, langAttrs) || escapeHtml(token.content)
   } else {
     highlighted = escapeHtml(token.content)
