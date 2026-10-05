@@ -5,6 +5,7 @@ import * as helpers from './helpers/index.ts'
 import Token from './token.ts'
 import Ruler from './ruler.ts'
 import Renderer from './renderer.ts'
+import CodeBlockPlan from './code_block_plan.ts'
 import ParserCore from './parser_core.ts'
 import StateCore from './rules_core/state_core.ts'
 import ParserBlock from './parser_block.ts'
@@ -433,6 +434,7 @@ class MarkdownIt {
   static Token = Token
   static Ruler = Ruler
   static Renderer = Renderer
+  static CodeBlockPlan = CodeBlockPlan
   static ParserCore = ParserCore
   static StateCore = StateCore
   static ParserBlock = ParserBlock

@@ -26,3 +26,9 @@ export type { default as ParserBlock } from './parser_block.ts'
 export type { default as StateBlock } from './rules_block/state_block.ts'
 export type { default as ParserInline } from './parser_inline.ts'
 export type { default as StateInline } from './rules_inline/state_inline.ts'
+export type { default as CodeBlockPlan } from './code_block_plan.ts'
+export type {
+  CodeBlockKind,
+  CodeBlockSelector,
+  CodeBlockReplacement
+} from './code_block_plan.ts'
