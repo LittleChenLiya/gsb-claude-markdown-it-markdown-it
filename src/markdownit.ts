@@ -18,6 +18,7 @@ import punycode from 'punycode.js'
 import cfg_default from './presets/default.ts'
 import cfg_zero from './presets/zero.ts'
 import cfg_commonmark from './presets/commonmark.ts'
+import { anchors, slugify } from './plugins/anchors.ts'
 import type { Env, MarkdownItOptions } from './types.ts'
 
 const config = {
@@ -439,6 +440,23 @@ class MarkdownIt {
   static StateBlock = StateBlock
   static ParserInline = ParserInline
   static StateInline = StateInline
+
+  /**
+   * Explicit heading anchors plugin. Assigns unique, deterministic ids to
+   * headings within a single parse. See {@link anchors} for options.
+   *
+   * @example
+   * ```js
+   * import MarkdownIt from 'markdown-it'
+   * const md = new MarkdownIt().use(MarkdownIt.anchors)
+   * ```
+   */
+  static anchors = anchors
+
+  /**
+   * Default slug function used by {@link anchors}.
+   */
+  static slugify = slugify
 }
 
 export default MarkdownIt
