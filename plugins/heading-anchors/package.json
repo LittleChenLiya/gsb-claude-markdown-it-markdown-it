@@ -1,0 +1,22 @@
+{
+  "name": "markdown-it-heading-anchors",
+  "version": "1.0.0",
+  "description": "Explicit, deterministic per-document heading anchors for markdown-it, with occurrence-aware references, user-id collision detection and snippet prefixes.",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs"
+  },
+  "keywords": [
+    "markdown-it",
+    "markdown-it-plugin",
+    "heading",
+    "anchor",
+    "slug",
+    "unicode"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "markdown-it": ">=14"
+  }
+}
